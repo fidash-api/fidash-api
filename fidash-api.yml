@@ -1,0 +1,133 @@
+openapi: '3.0.2'
+info:
+  title: Financial Data Sharing API
+  description: |-
+    This a API documentation is a template for Financial Data Access Regulation (FIDAR)
+    You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+    That way, with time, we can improve the API in general, and become as best practice for financial data sharing.
+
+    For using, you just need to replace the servers with yours.
+    You are free to add any specificity to this documentation but do not edit nor remove anything.
+
+    Some useful links:
+    - [FIDAR](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:52023PC0360)
+    - [The source API definition (fidash)](https://github.com/fidash-api/fidash-api/blob/main/src/main/resources/fidash-api.yaml)
+    - [OpenApi editor](https://editor.swagger.io/)
+  version: '0.0.1'
+  termsOfService: https://data.provider.com/term
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://data.provider.com/v0
+
+tags:
+  - name: auth
+    description: Authentication and authorization
+  - name: holding
+    description: Holdings of the client
+  - name: transaction
+    description: Transactions of the client
+
+paths:
+  /meta:
+    get:
+      summary: Get meta data for this provider
+      description: Returns meta data. This is available without auth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: Meta data of the Data Provider
+                required:
+                  - name
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: Data Provider
+                  logoUrl:
+                    type: string
+                    description: URL address to the logo of the Data Provider
+                  bic:
+                    type: string
+                    description: BIC code of the Data Provider
+                  lei:
+                    type: string
+                    description: LEI code of the Data Provider
+                  contact:
+                    type: object
+                    description: Contact information where 3rd party user can request access to this API or ask for help
+                    properties:
+                      name:
+                        type: string
+                        description: Name of the contact person or team
+                      email:
+                        type: string
+                      url:
+                        type: string
+  /holdings:
+    get:
+      tags:
+        - holding
+      summary: Get all holdings of the client
+      description: Returns a list of holdings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/holding'
+  /transactions:
+    get:
+      tags:
+        - transaction
+      summary: Get all Transactions of the client
+      description: Returns a list of Transactions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/transaction'
+  /contracts:
+    get:
+      tags:
+        - holding
+      summary: Get all contracts of the client
+      description: Returns a list of contracts, aka. non standard contracts like forwards, loans, deposits etc.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/contract'
+
+components:
+  schemas:
+    holding:
+      type: object
+      properties:
+        property:
+          type: integer
+    transaction:
+      type: object
+      properties:
+        property:
+          type: integer
+    contract:
+      type: object
+      properties:
+        property:
+          type: integer
