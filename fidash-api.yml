@@ -68,6 +68,13 @@ paths:
                         type: string
                       url:
                         type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+                
   /holdings:
     get:
       tags:
@@ -83,6 +90,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/holding'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
   /transactions:
     get:
       tags:
@@ -98,6 +112,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/transaction'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
   /contracts:
     get:
       tags:
@@ -113,6 +134,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/contract'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
 
 components:
   schemas:
@@ -131,3 +158,16 @@ components:
       properties:
         property:
           type: integer
+    error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code: 
+          type: string
+          description: "todo: use small list of codes like https://cloud.google.com/apis/design/errors"
+        message:
+          type: string
+        detail:
+          type: string
