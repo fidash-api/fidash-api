@@ -74,7 +74,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/error'
-                
+
   /holdings:
     get:
       tags:
@@ -146,8 +146,115 @@ components:
     holding:
       type: object
       properties:
-        property:
-          type: integer
+        asOfDate:
+          type: string
+          format: 'date'
+        id:
+          type: string
+          description: "internal unique ID of this holding"
+        account:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "internal account id"
+            href:
+              type: string
+              description: "link to the product in this API"
+            name:
+              type: string
+              description: "short name"
+            type:
+              type: string
+              description: "account type name like checking, investment, pention etc. (todo: enum?)"
+        product:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "internal id"
+            href:
+              type: string
+              description: "link to the product in this API"
+            codes:
+              type: object
+              properties:
+                ccy:
+                  type: string
+                  description: "currency in case of cash"
+                isin:
+                  type: string
+                iban:
+                  type: string
+                citi:
+                  type: string
+                epic:
+                  type: string
+                sedol:
+                  type: string
+                mex:
+                  type: string
+                internal:
+                  type: string
+                  description: "todo: link"
+            currency:
+              type: string
+              description: "instrument currency; todo: ISO"
+        size:
+          type: object
+          properties:
+            units:
+              type: number
+            type:
+              type: string
+              enum:
+                - AMOUNT
+                - QUANTITY
+                - NATIONAL
+                - LOT
+            sign:
+              type: string
+              enum:
+                - "-"
+                - "+"
+        valuation:
+          type: object
+          description: "quick access to valuation"
+          properties:
+            href:
+              type: string
+              description: "link to the detailed valuation in this API"
+            amount:
+              type: number
+            currency:
+              type: string
+            date:
+              type: string
+              description: "the valuation date of the holding"
+        place:
+          type: string
+          description: "cudodian, broker, giro, eurex, ddtd etc."
+        pledged:
+          type: object
+          properties:
+            size:
+              type: number
+              description: "in the same units type as the size of the holding"
+            purpose:
+              type: string
+              description: "mortgage, loan, sale, redemption, subscription, repo etc."
+            pledgee:
+              type: string
+              description: "bank, broker etc."
+        accruals:
+          type: number
+          description: "todo"
+        timestamp:
+          type: string
+          description: "UTC timestamp"
+    
+    
+            
     transaction:
       type: object
       properties:
