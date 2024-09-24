@@ -141,12 +141,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/error'
 
-  /contracts:
+  /products:
     get:
       tags:
         - holding
       summary: Get all contracts of the client
-      description: Returns a list of contracts, aka. non standard contracts like forwards, loans, deposits etc.
+      description: Returns a list of marketable and non-marketable products/contracts, aka. non standard contracts like forwards, loans, deposits etc.
       responses:
         '200':
           description: OK
@@ -155,7 +155,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/contract'
+                  $ref: '#/components/schemas/product'
         default:
           description: unexpected error
           content:
@@ -343,11 +343,130 @@ components:
       properties:
         property:
           type: integer
-    contract:
+
+    product:
       type: object
       properties:
-        property:
-          type: integer
+        id:
+          type: string
+          description: "internal id"
+        identities:
+          type: array
+          properties:
+            code:
+              type: string
+              enum:
+                - CCY
+                - ISIN
+                - IBAN
+                - CITI
+                - EPIC
+                - SEDOL
+                - MEX
+                - TELEKURS
+                - SEDOL
+                - FIGI
+              description: "product identity codes"
+            value:
+              type: string
+              description: "the value of the code"
+        currency:
+          type: string
+          description: "instrument currency; todo: ISO"
+        name:
+          type: string
+          description: "Name of the product"
+        description:
+          type: string
+          description: "description of the product"
+        quotation:
+          type: string
+          enum:
+            - UNIT
+            - PRINCIPAL
+          description: "quoted in UNIT or PRICIPAL"
+        type:
+          type: string
+          enum:
+            - EQUITY
+            - BOND
+            - CERTIFICATE
+            - FUTURE
+            - FORWARD
+            - INDEX
+            - OPTION
+            - FUND
+            - LOAN
+            - DEPOSIT
+            - INSURANCE
+            - OTHER
+          description: "the product type: equity, bond, certificate, future, forward, index, option, fund, loan, deposit, insurance, other (car, house etc.)"
+        issued:
+          type: string
+          format: 'date'
+          description: "issue date"
+        amount:
+          type: number
+          description: "loan: amount; deposit: amount; bond: nominal amount; equity: market cap; forward: main ccy amount; other: purchase/cost amount"
+        interest:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - COUPON
+                - DIVIDEND
+                - INTEREST
+              description: "interest rate type: coupon/dividend/interest"
+            rate:
+              type: object
+              properties:
+                percent:
+                  type: number
+                  description: "loan: interest rate; deposit: interest rate; forward: fx rate"
+                type:
+                  type: string
+                  description: "enum: fixed/variable"
+            periodicity:
+              type: number
+              description: "the number to be devided by the 12 month: 1 = once once/year; 2 = twice, 4 = three times; 3 = four times; 6 = six times; 12 = twelve times"
+            first:
+              type: string
+              format: 'date'
+              description: "first interest payment"
+        underlying:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "internal id of the underlying product"
+            quantity:
+              type: number
+              description: "quantity of the underlying security"
+        option:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - AMERICAN
+                - EUROPEAN
+              description: "American/European"
+            direction:
+              type: string
+              enum:
+                - PUT
+                - CALL
+              description: "PUT/CALL"
+            strike:
+              type: number
+              description: "strike price"
+        maturity:
+          type: string
+          format: 'date'
+          description: "product maturity date"
+
+
     error:
       type: object
       required:
