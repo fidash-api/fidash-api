@@ -390,7 +390,6 @@ components:
           enum:
             - EQUITY
             - BOND
-            - CERTIFICATE
             - FUTURE
             - FORWARD
             - INDEX
@@ -401,13 +400,32 @@ components:
             - INSURANCE
             - OTHER
           description: "the product type: equity, bond, certificate, future, forward, index, option, fund, loan, deposit, insurance, other (car, house etc.)"
+        issuer:
+          type: object
+          properties:
+            name: 
+              type: string
+              description: issuer's name
+            identities:
+              type: array
+              properties:
+                code:
+                  type: string
+                  enum:
+                    - LEI
+                    - TAX
+                value:
+                  type: string
+            country:
+              type: string
+              description: country ISO code; todo
         issued:
           type: string
           format: 'date'
-          description: "issue date"
+          description: "equity: date of listing; bond: issue date; other: purchase (created/built?????) date"
         amount:
           type: number
-          description: "loan: amount; deposit: amount; bond: nominal amount; equity: market cap; forward: main ccy amount; other: purchase/cost amount"
+          description: "loan: amount; deposit: amount; bond: face value; equity: face value; forward: main ccy amount; option: face value; other: purchase/cost amount"
         interest:
           type: object
           properties:
@@ -415,8 +433,8 @@ components:
               type: string
               enum:
                 - COUPON
-                - DIVIDEND
                 - INTEREST
+                - PIK
               description: "interest rate type: coupon/dividend/interest"
             rate:
               type: object
@@ -426,14 +444,55 @@ components:
                   description: "loan: interest rate; deposit: interest rate; forward: fx rate"
                 type:
                   type: string
-                  description: "enum: fixed/variable"
+                  enum:
+                    - FIXED
+                    - VARIABLE
+            amount:
+              type: object
+              properties:
+                value:
+                  type: number
+                  description: "amount"
+                currency:
+                  type: string
+                  description: "currency ISO; todo"
+            shares:
+              type: object
+              description: payment-in-kind
+              properties:
+                id:
+                  type: string
+                  description: internal product id
+                quantity:
+                  type: number
             periodicity:
               type: number
               description: "the number to be devided by the 12 month: 1 = once once/year; 2 = twice, 4 = three times; 3 = four times; 6 = six times; 12 = twelve times"
+            payment:
+              type: object
+              description: Regular payment day and month
+              properties:
+                day:
+                  type: number
+                month:
+                  type: number
             first:
               type: string
               format: 'date'
               description: "first interest payment"
+        fund:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - MUTUAL
+                - ETF
+            earning:
+              type: string
+              enum:
+                - ACCUMULATING
+                - DISTRiBUTING
         underlying:
           type: object
           properties:
@@ -445,6 +504,7 @@ components:
               description: "quantity of the underlying security"
         option:
           type: object
+          description: also certificates
           properties:
             type:
               type: string
@@ -460,7 +520,10 @@ components:
               description: "PUT/CALL"
             strike:
               type: number
-              description: "strike price"
+              description: "Strike price"
+            barrier:
+              type: number
+              description: Barrier price
         maturity:
           type: string
           format: 'date'
