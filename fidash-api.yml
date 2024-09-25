@@ -141,12 +141,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/error'
 
-  /products:
+  /instruments/{id}:
     get:
       tags:
         - holding
       summary: Get all contracts of the client
       description: Returns a list of marketable and non-marketable products/contracts, aka. non standard contracts like forwards, loans, deposits etc.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: 
+            type: string
       responses:
         '200':
           description: OK
@@ -155,7 +161,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/product'
+                  $ref: '#/components/schemas/instrument'
         default:
           description: unexpected error
           content:
@@ -344,7 +350,283 @@ components:
         property:
           type: integer
 
-    product:
+    
+    instrument:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Intenal identification of the "instrument
+        identities:
+          type: array
+          required:
+            - code
+            - value
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                enum:
+                  - ISIN
+                  - IBAN
+                  - CITI
+                  - EPIC
+                  - SEDOL
+                  - MEX
+                  - TELEKURS
+                  - SEDOL
+                  - FIGI
+                  - TICKER
+                description: "product identity codes; eg. TICKER = ESZ4"
+              value:
+                type: string
+                description: "the value of the code"
+        category:
+          type: string
+          enum:
+            - CASH_AND_EQUIVALENT
+            - DEBT
+            - EQUITY
+            - FX
+            - DERIVATIVE
+            - INSURANCE
+            - NON_MARKETABLE_ASSET
+            - CASH_AND_OTHER
+          description: "cash_and_other: cash + car/house"
+        type:
+          type: string
+          description: "Treasury bill(T-bills), bank deposit, CD, ETD, loan, ETF, ETC, FRA, option (on stock, on index, on commodity), warrant, CFD, REIT, certificate, sp, future, forward, stock, pe, bond, MBS, CDO, swap (FX, interest rate swap), mutual fund"
+        name:
+          type: string
+          description: "Name of the investment"
+        description:
+          type: string
+          description: "Short description of the investment"
+        quotation:
+          type: object
+          description: ????? no needed
+          properties:
+            type:
+              type: string
+              enum:
+                - UNIT
+                - PRINCIPAL
+              description: "quoted in UNIT or PRICIPAL"
+            value:
+              type: number
+              description: "loan: amount; deposit: amount; bond: face value; equity: face value; forward: main ccy amount; option: face value; other: purchase/cost amount"
+        issued:
+          type: object
+          properties:
+            by:
+              type: string
+              description: Issued by
+            on:
+              type: string
+              format: 'date'
+              description: Issued date or listed on exchange
+            currency:
+              type: string
+              description: "instrument's denominated currency; todo: ISO"
+            country:
+              type: string
+              description: issuer's ISO country code, todo
+        trading:
+          type: object
+          properties:
+            exchange:
+              type: string
+              default: OTC
+              description: Exchenage ISO code, todo
+        pricing:
+          type: object
+          properties:
+            frequency:
+              type: string
+              enum:
+                - DAILY
+                - TWINE(2-DAYS_TODP?)
+                - WEEKLY
+                - HALF-MONTHLY
+                - MONTLY
+                - QUARTERLY
+                - SEMI-ANNUAL
+                - YEARLY
+                - PERPETUAL
+              default: DAILY
+            currency:
+              type: string
+              description: Pricing currency (might be different than the issue)
+            quotation:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - UNIT
+                    - PRINCIPAL
+                  description: "quoted in UNIT or PRICIPAL"
+                value:
+                  type: number
+                  description: "loan: amount; deposit: amount; bond: face value; equity: face value; forward: main ccy amount; option: face value; other: purchase/cost amount"
+                currency:
+                  type: string
+                  description: Pricing currency (might be different than the issue)
+                fluctuation:
+                  type: number
+                  description: Minimum price fluctuation, eg. ES Future = 0.25
+                valuation_factor:
+                  type: number
+                  description: valuation factor for Futures; lepeskoz????
+        payment:
+          type: object
+          description: Regular interest/payment
+          properties:
+            type:
+              type: string
+              enum:
+                - COUPON
+                - INTEREST
+                - DIVIDEND
+                - AMOUNT
+                - ZERO
+              description: "interest rate type: coupon/interest; amount in case of Forwards/Swap/Repo/FRA"
+            rate:
+              type: object
+              properties:
+                percent:
+                  type: number
+                  description: "loan: interest rate; deposit: interest rate; forward: fx rate ? or in FX"
+                type:
+                  type: string
+                  enum:
+                    - FIXED
+                    - VARIABLE
+            amount:
+              type: object
+              properties:
+                value:
+                  type: number
+                  description: "amount"
+                currency:
+                  type: string
+                  description: "currency ISO; todo"
+            shares:
+              type: object
+              description: payment-in-kind ????
+              properties:
+                id:
+                  type: string
+                  description: internal product id
+                quantity:
+                  type: number
+            periodicity:
+              type: object
+              properties:
+                frequency:
+                  type: number
+                  description: "the number to be devided by the 12 month: 1 = once once/year; 2 = twice, 4 = three times; 3 = four times; 6 = six times; 12 = twelve times; in case of FX undefined means one payment only"
+                accrual_calendar:
+                  type: string
+                  enum:
+                    - 30/360_ISDA
+                    - 30/360_PSA
+                    - 30/360_SIA
+                    - 30/360E
+                    - 30/360E1
+                    - ACT/360
+                    - ACT/364
+                    - ACT/365
+                    - ACT/365_ISDA
+                    - ACT/365_Japan
+                    - ACT/ACT
+                    - ACT/ACT_AFB
+                first:
+                  type: string
+                  format: 'date'
+                  description: "First interest payment"
+                dated:
+                  type: object
+                  description: Dated date payment day and month
+                  properties:
+                    day:
+                      type: number
+                    month:
+                      type: number
+                next:
+                  type: string
+                  format: 'date'
+                  description: "Next interest payment (for dividend but any others)"
+                last:
+                  type: string
+                  format: 'date'
+                  description: "Last interest payment"
+        maturity:
+          type: object
+          description: expiration for Futures and Forwards/Swap/Repo/FRA/Options
+          properties:
+            day:
+              type: number
+            month:
+              type: number
+            year:
+              type: number
+        underlying:
+          type: object
+          properties:
+            id:
+              type: string
+              description: "internal id of the underlying instrument if available (exclude: index, commodity, sp)"
+            name:
+              type: string
+            size:
+              type: number
+              description: "contract size of the underlying security, eg. ES Future: 50; for options it is usually 100"
+        option:
+          type: object
+          description: also certificates
+          properties:
+            style:
+              type: string
+              enum:
+                - AMERICAN
+                - EUROPEAN
+              description: "American/European"
+            type:
+              type: string
+              enum:
+                - PUT
+                - CALL
+              description: "PUT/CALL"
+            strike:
+              type: number
+              description: "Strike price"
+            barrier:
+              type: number
+              description: Barrier price
+
+
+    error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code: 
+          type: string
+          description: "todo: use small list of codes like https://cloud.google.com/apis/design/errors"
+        message:
+          type: string
+        detail:
+          type: string
+
+    
+    
+    XXXproductDEL:
       type: object
       properties:
         id:
@@ -385,6 +667,17 @@ components:
             - UNIT
             - PRINCIPAL
           description: "quoted in UNIT or PRICIPAL"
+        main_type:
+          type: string
+          enum:
+            - CASH_AND_EQUIVALENT
+            - MONEY_MARKET
+            - EQUITY
+            - FIXED_INCOME
+            - DERIVATIVE
+            - INSURANCE
+            - NON_MARKETABLE_ASSET
+          description: "alternative types, MONEY_MARKET: loan, deposit; DERIVATIVE: future, forward, option, certificate, sp; NON_MARKETABLE_ASSET: car, house"
         type:
           type: string
           enum:
@@ -392,14 +685,15 @@ components:
             - BOND
             - FUTURE
             - FORWARD
-            - INDEX
             - OPTION
+            - CERTIFICATE
+            - STRUCTURED_PRODUCT
             - FUND
             - LOAN
             - DEPOSIT
             - INSURANCE
             - OTHER
-          description: "the product type: equity, bond, certificate, future, forward, index, option, fund, loan, deposit, insurance, other (car, house etc.)"
+          description: "Certificate = option, SP = option. Other assets are like car, house etc.)"
         issuer:
           type: object
           properties:
@@ -498,7 +792,7 @@ components:
           properties:
             id:
               type: string
-              description: "internal id of the underlying product"
+              description: "internal id of the underlying product if available (exclude: index, commodity, sp)"
             quantity:
               type: number
               description: "quantity of the underlying security"
@@ -528,18 +822,3 @@ components:
           type: string
           format: 'date'
           description: "product maturity date"
-
-
-    error:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code: 
-          type: string
-          description: "todo: use small list of codes like https://cloud.google.com/apis/design/errors"
-        message:
-          type: string
-        detail:
-          type: string
