@@ -515,6 +515,13 @@ components:
                 currency:
                   type: string
                   description: "currency ISO; todo"
+            sign:
+              type: string
+              enum: [+, "-" ]
+              description: >
+                Sign of the instrument's payment from instrument holding entity perspective:
+                  * + maens income
+                  * - means payable
             shares:
               type: object
               description: payment-in-kind ????
@@ -608,6 +615,13 @@ components:
             barrier:
               type: number
               description: Barrier price
+        pair:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+              description: The Internal identification of the other leg of the instrument pair. (eg. FX)
 
 
     error:
