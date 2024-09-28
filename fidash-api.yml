@@ -359,14 +359,18 @@ components:
       properties:
         id:
           type: string
-          description: Intenal identification of the "instrument
+          minLength: 1
+          description: Intenal unique identification of the instrument
         identities:
           type: array
-          required:
-            - code
-            - value
+          minItems: 1
+          uniqueItems: true
+          description: Commonly used identification codes of the instrument.
           items:
             type: object
+            required:
+              - code
+              - value
             properties:
               code:
                 type: string
@@ -381,10 +385,13 @@ components:
                   - SEDOL
                   - FIGI
                   - TICKER
-                description: "product identity codes; eg. TICKER = ESZ4"
+                description: Commonly used identity code, eg. TICKER used by CBOT/CME
               value:
                 type: string
-                description: "the value of the code"
+                minLength: 1
+                description: The value of the code, eg. if the code is 'TICKER' thw value could be 'ESZ4'
+            additionalProperties: false
+            example: [{code: "TICKER", value: "ESZ4"}]
         category:
           type: string
           enum:
@@ -396,54 +403,83 @@ components:
             - INSURANCE
             - NON_MARKETABLE_ASSET
             - CASH_AND_OTHER
-          description: "cash_and_other: cash + car/house"
+          description: "cash_and_other: cash + car/house, TODO: clear-up"
         type:
           type: string
-          description: "Treasury bill(T-bills), bank deposit, CD, ETD, loan, ETF, ETC, FRA, option (on stock, on index, on commodity), warrant, CFD, REIT, certificate, sp, future, forward, stock, pe, bond, MBS, CDO, swap (FX, interest rate swap), mutual fund"
+          minLength: 1
+          description: >
+            Specification of the category, eg.:
+              * cash, current account, investment account
+              * Equity, stock, Private Equity
+              * Gond, Treasury bill(T-bills), Corporate bond.
+              * bank deposit, CD, ETD, loan, deposit
+              * ETF, ETC
+              * option (on stock, on index, on futures), warrant, CFD, certificate, Structured Products
+              * REIT, house rental
+              * Future, 
+              * FX Spot, FX Forward, FX swap
+              * FRA, MBS, CDO, interest rate swap
+              * mutual fund
+              * life insurance
+              * cars, other valuables 
+              * etc.
         name:
           type: string
-          description: "Name of the investment"
+          minLength: 1
+          description: Name of the instrument
         description:
           type: string
-          description: "Short description of the investment"
-        quotation:
-          type: object
-          description: ????? no needed
-          properties:
-            type:
-              type: string
-              enum:
-                - UNIT
-                - PRINCIPAL
-              description: "quoted in UNIT or PRICIPAL"
-            value:
-              type: number
-              description: "loan: amount; deposit: amount; bond: face value; equity: face value; forward: main ccy amount; option: face value; other: purchase/cost amount"
+          minLength: 1
+          description: Short description of the instrument
         issued:
           type: object
+          description: >
+            Properties describing issuing the instrument.
+          required:
+            - by
+            - name
           properties:
             by:
               type: string
-              description: Issued by
+              minLength: 1
+              description: Name of the issuer
             on:
               type: string
-              format: 'date'
+              format: date
+              minLength: 1
               description: Issued date or listed on exchange
             currency:
               type: string
-              description: "instrument's denominated currency; todo: ISO"
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z][A-Z][A-Z]$
+              description: Instrument's denominated currency **ISO 4217** alphabetic code
             country:
               type: string
-              description: issuer's ISO country code, todo
+              minLength: 2
+              maxLength: 2
+              pattern: ^[A-Z][A-Z]$
+              description: The **ISO 3166-1 alpha-2** country code where the instrument was issued
         trading:
           type: object
+          required:
+            - mic
           properties:
-            exchange:
+            mic:
               type: string
+              minLength: 1
               default: OTC
-              description: Exchenage ISO code, todo
-        pricing:
+              description: The **ISO 10383** code of the market where the instrument is trading
+              example: XNAS
+            market:
+              type: string
+              minLength: 1
+              description: The name of the market where the instrument is trading
+              example: NASDAQ
+        quotation:
           type: object
+          required:
+            - frequency
           properties:
             frequency:
               type: string
@@ -460,31 +496,43 @@ components:
               default: DAILY
             currency:
               type: string
-              description: Pricing currency (might be different than the issue)
-            quotation:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - UNIT
-                    - PRINCIPAL
-                  description: "quoted in UNIT or PRICIPAL"
-                value:
-                  type: number
-                  description: "loan: amount; deposit: amount; bond: face value; equity: face value; forward: main ccy amount; option: face value; other: purchase/cost amount"
-                currency:
-                  type: string
-                  description: Pricing currency (might be different than the issue)
-                fluctuation:
-                  type: number
-                  description: Minimum price fluctuation, eg. ES Future = 0.25
-                valuation_factor:
-                  type: number
-                  description: valuation factor for Futures; lepeskoz????
+              minLength: 3
+              maxLength: 3
+              pattern: ^[A-Z][A-Z][A-Z]$
+              description: Pricing currency **ISO 4217** alphabetic code (It might be different than the issue)
+            type:
+              type: string
+              enum:
+                - UNIT
+                - PRINCIPAL
+              description: The instrument is quoted in UNIT or PRICIPAL
+            value:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+              description: >
+                Face value of the instrument's quotation
+
+                Eg.:
+                  * loan: amount; deposit: amount; 
+                  * bond: face value; equity: face value; 
+                  * forward: main ccy amount; 
+                  * option: face value; 
+                  * valuables (car, house): purchase/cost amount ???? TODO: is it valid?
+            fluctuation:
+              type: number
+              minimum: 0
+              exclusiveMinimum: true
+              default: 1
+              description: Minimum price fluctuation, eg. ES Future = 0.25
         payment:
           type: object
-          description: Regular interest/payment
+          description: >
+            Receivable or payable interest to/by the holder of the instrument.
+            TODO: The `rate`, `amount` or both are required too
+          required:
+            - type
+            - sign
           properties:
             type:
               type: string
@@ -497,34 +545,51 @@ components:
               description: "interest rate type: coupon/interest; amount in case of Forwards/Swap/Repo/FRA"
             rate:
               type: object
+              required:
+                - value
+                - rate
               properties:
-                percent:
+                value:
                   type: number
-                  description: "loan: interest rate; deposit: interest rate; forward: fx rate ? or in FX"
+                  description: >
+                    The rate value of the payment.
+                      * interest rate - in case of loan/deposit or bond;
+                      * FX exchange rate - in case of forward
                 type:
                   type: string
                   enum:
                     - FIXED
                     - VARIABLE
+                    - FX
             amount:
               type: object
+              description: The interest amount for example in case of annuality loan or insurance
+              required:
+                - value
+                - currency
               properties:
                 value:
                   type: number
-                  description: "amount"
+                  minimum: 0
+                  exclusiveMinimum: true
+                  description: Amount
                 currency:
                   type: string
-                  description: "currency ISO; todo"
+                  minLength: 3
+                  maxLength: 3
+                  pattern: ^[A-Z][A-Z][A-Z]$
+                  description: Amount currency **ISO 4217** alphabetic code
             sign:
               type: string
-              enum: [+, "-" ]
+              enum: ["+", "-" ]
               description: >
                 Sign of the instrument's payment from instrument holding entity perspective:
                   * + maens income
                   * - means payable
             shares:
               type: object
-              description: payment-in-kind ????
+              description: >
+                payment-in-kind ???? TODO: is it valid?
               properties:
                 id:
                   type: string
@@ -533,11 +598,22 @@ components:
                   type: number
             periodicity:
               type: object
+              minProperties: 1
               properties:
                 frequency:
-                  type: number
-                  description: "the number to be devided by the 12 month: 1 = once once/year; 2 = twice, 4 = three times; 3 = four times; 6 = six times; 12 = twelve times; in case of FX undefined means one payment only"
-                accrual_calendar:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+                  description: >
+                    The number to be devided by the 12 month: 
+                      * 1 = once per year; 
+                      * 2 = twice per year, 
+                      * 4 = three times per year; 
+                      * 3 = four times per year; 
+                      * 6 = six times per year; 
+                      * 12 = twelve times per year; 
+                      * undefined = one payment only on `last` date (eg. zero coupon bond)
+                accrualCalendar:
                   type: string
                   enum:
                     - 30/360_ISDA
@@ -554,8 +630,8 @@ components:
                     - ACT/ACT_AFB
                 first:
                   type: string
-                  format: 'date'
-                  description: "First interest payment"
+                  format: date
+                  description: First interest payment
                 dated:
                   type: object
                   description: Dated date payment day and month
@@ -566,63 +642,93 @@ components:
                       type: number
                 next:
                   type: string
-                  format: 'date'
-                  description: "Next interest payment (for dividend but any others)"
+                  format: date
+                  description: Next interest payment (for dividend but any others)
                 last:
                   type: string
-                  format: 'date'
-                  description: "Last interest payment"
-        maturity:
+                  format: date
+                  description: Last interest payment
+        expiration:
           type: object
-          description: expiration for Futures and Forwards/Swap/Repo/FRA/Options
+          description: >
+            Expiration of the instrument
+              * maturity date for bonds;
+              * expiration date for Futures and Forwards/Swap/Repo/FRA/Options
+          required:
+            - day # even Futures have day
+            - month
+            - year
           properties:
             day:
-              type: number
+              type: integer
+              minimum: 1
+              maximum: 31
             month:
-              type: number
+              type: integer
+              minimum: 1
+              maximum: 12
             year:
-              type: number
+              type: integer
+              minimum: 1
         underlying:
           type: object
+          description: The underlying of the instrument
+          required:
+            - name
           properties:
             id:
               type: string
-              description: "internal id of the underlying instrument if available (exclude: index, commodity, sp)"
+              minLength: 1
+              description: Internal id of the underlying instrument if available (undefined for underlying like index, commodity, sp)
             name:
               type: string
+              minLength: 1
+              description: >
+                The name of the underlying. Eg.: S&P 500, oil
+              example: "S&P 500"
             size:
               type: number
-              description: "contract size of the underlying security, eg. ES Future: 50; for options it is usually 100"
+              minimum: 0
+              exclusiveMinimum: true
+              description: >
+                The Contract size of the underlying security, eg. ES Future: 50; for options it is usually 100
+              example: 50
         option:
           type: object
-          description: also certificates
+          description: Properties related to options including certificates, Structured Products
+          required:
+            - type
+            - strike
           properties:
             style:
               type: string
               enum:
                 - AMERICAN
                 - EUROPEAN
-              description: "American/European"
+              description: American/European
+              default: AMERICAN
             type:
               type: string
               enum:
                 - PUT
                 - CALL
-              description: "PUT/CALL"
+              description: PUT/CALL
             strike:
-              type: number
-              description: "Strike price"
+              type: number  # futures can have negative prices
+              description: Strike price
             barrier:
-              type: number
+              type: number  # futures can have negative prices
               description: Barrier price
         pair:
           type: object
+          required:
+            - id
           properties:
             id:
               type: string
               minLength: 1
               description: The Internal identification of the other leg of the instrument pair. (eg. FX)
-
+      additionalProperties: true  # it is allowed to provide additional properties if needed
 
     error:
       type: object
