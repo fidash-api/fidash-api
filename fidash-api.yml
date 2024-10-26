@@ -347,8 +347,236 @@ components:
     transaction:
       type: object
       properties:
-        property:
-          type: integer
+        id:
+          type: string
+          description: Internal unique transaction identification
+        receive:
+          type: object
+          description: Receivable from the account holder
+          properties:
+            instrument:
+              type: string
+              description: Intenal unique identification of the instrument ???TODo instrument????
+            position:
+              type: object
+              description: Net position
+              properties:
+                units:
+                  type: number
+                type:
+                  type: string
+                  enum:
+                    - AMOUNT
+                    - QUANTITY
+                    - NATIONAL
+                    - LOT
+                sign:
+                  type: string
+                  enum:
+                    - "-"
+                    - "+"
+                cost:
+                  type: number
+                  description: "cost amount ??? needed here?"
+            amount:
+              type: object
+              properties:
+                value: 
+                  type: number
+                  description: Transaction net amount
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  pattern: ^[A-Z][A-Z][A-Z]$
+                  description: Amount currency **ISO 4217** alphabetic code
+                breakdown:
+                  type: array
+                  uniqueItems: true
+                  items:
+                    type: object
+                    properties:
+                      units:
+                        type: number
+                      type:
+                        type: string
+                        enum:
+                          - AMOUNT
+                          - QUANTITY
+                          - NATIONAL
+                          - LOT
+                      sign:
+                        type: string
+                        enum:
+                          - "-"
+                          - "+"
+                      amount:
+                        type: number
+                        description: "amount ??? cost"
+                      currency:
+                        type: string
+                        minLength: 3
+                        maxLength: 3
+                        pattern: ^[A-Z][A-Z][A-Z]$
+                        description: Amount currency **ISO 4217** alphabetic code
+                      purpose:
+                        type: string
+                        enum:
+                          - COST
+                          - TAX
+                          - INTEREST # accrued interest
+                      description:
+                        type: string
+                        description: Description of this item
+        give:
+          type: object
+          description: Receivable from the account holder
+          properties:
+            instrument:
+              type: string
+              description: Intenal unique identification of the instrument ???TODo instrument????
+            quotation:
+              type: object
+              properties:
+                units:
+                  type: number
+                type:
+                  type: string
+                  enum:
+                    - AMOUNT
+                    - QUANTITY
+                    - NATIONAL
+                    - LOT
+                sign:
+                  type: string
+                  enum:
+                    - "-"
+                    - "+"
+                cost:
+                  type: number
+                  description: "cost amount"
+            amount:
+              type: object
+              properties:
+                value: 
+                  type: number
+                  description: Transaction net amount
+                currency:
+                  type: string
+                  minLength: 3
+                  maxLength: 3
+                  pattern: ^[A-Z][A-Z][A-Z]$
+                  description: Amount currency **ISO 4217** alphabetic code
+                breakdown:
+                  type: array
+                  uniqueItems: true
+                  items:
+                    type: object
+                    properties:
+                      units:
+                        type: number
+                      type:
+                        type: string
+                        enum:
+                          - AMOUNT
+                          - QUANTITY
+                          - NATIONAL
+                          - LOT
+                      sign:
+                        type: string
+                        enum:
+                          - "-"
+                          - "+"
+                      amount:
+                        type: number
+                        description: "amount ??? cost"
+                      currency:
+                        type: string
+                        minLength: 3
+                        maxLength: 3
+                        pattern: ^[A-Z][A-Z][A-Z]$
+                        description: Amount currency **ISO 4217** alphabetic code
+                      purpose:
+                        type: string
+                        enum:
+                          - COST
+                          - TAX
+                          - INTEREST # accrued interest
+                      description:
+                        type: string
+                        description: Description of this item            
+        account:
+          type: object
+          description: todo ????? NO because the account is an instrument too
+          properties:
+            id:
+              type: string
+              description: "internal account id, preferably IBAN"
+            href:
+              type: string
+              description: "link to the product in this API"
+            name:
+              type: string
+              description: "short name"
+            type:
+              type: string
+              description: "account type name like checking, investment, pention etc. (todo: enum?)"
+        place:
+          type: string
+          description: "cudodian, broker, giro, eurex, ddtd etc."
+        trade:
+          type: string
+          enum:
+            - BUY
+            - SELL
+          description: ISO22022 trade codes
+        reference:
+          type: string
+          description: >
+            External reference
+
+            One trade can have many transactions and all of them have to have this reference
+            eg.: FX pairs, dividends ???? NO, IT REFERS BACK TO POSITION????
+        status:
+          type: string
+          enum:
+            - OPEN
+            - EXECUTED
+            - SETTLED
+          description: FIX status codes
+        dates:
+          type: object
+          properties:
+            operation:
+              type: string
+              format: date
+              description: Operation date - the date of opening the transaction
+            trade:
+              type: string
+              format: date
+              description: Trade date - the date of executing the trade
+            settlement:
+              type: string
+              format: date
+              description: Settlement date - the date of settlementing the transaction
+            value:
+              type: string
+              format: date
+              description: >
+                Value date - the date of effecting in the books (default: the same as the Trade date)
+                Important for back dated transactions
+            booking:
+              type: string
+              format: date
+              description: >
+                Booking date - the date of booking the transaction (default: the same as the Trade date).
+                Important for back dated transactions
+        reversal:
+          type: boolean
+          description: reversal transaction, possible?
+        timestamp:
+          type: number
+          description: kind of http etag ??? todo move to the end of response???
 
     
     instrument:
